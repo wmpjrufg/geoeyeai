@@ -7,63 +7,63 @@ from geo import *
 # Home
 lang = st.session_state.get("lang", "pt")
 
-# # Cria o dicionário com os textos DESSA página específica
-# textos = {
-#             "pt": {
-#                     "titulo": "Verificação de uma Longarina – Flexão Pura (NBR 7190)",
-#                     "entrada_tipo_secao": "Tipo de seção",
-#                     "tipo_secao": ["Retangular", "Circular"],
-#                     "base": "Base (cm)",
-#                     "altura": "Altura (cm)",
-#                     "diametro": "Diâmetro (cm)",
-#                     "entrada_comprimento": "Comprimento da viga (m)",
-#                     "carga_permanente": "Carga permanente (kN/m)",
-#                     "trem_tipo": "Tipo de trem",
-#                     "tipo_tb": ["TB-240", "TB-450"],
-#                     "classe_carregamento": "Classe de carregamento",
-#                     "classe_carregamento_opcoes": ["Permanente", "Longa duração", "Média duração", "Curta duração", "Instantânea"],
-#                     "classe_madeira": "Classe de madeira", 
-#                     "classe_madeira_opcoes": ["Madeira natural","Madeira recomposta"],
-#                     "classe_umidade": "Classe de umidade",
-#                     "gamma_g": "γg – Coeficiente parcial de segurança da carga permanente",
-#                     "gamma_q": "γq – Coeficiente parcial de segurança da carga variável",
-#                     "gamma_w": "γw – Coeficiente parcial de segurança do material",
-#                     "f_ck": "Resistência característica à compressão paralela às fibras (MPa)",
-#                     "f_tk": "Resistência característica à tração paralela às fibras (MPa)",
-#                     "e_modflex": "Módulo de elasticidade à flexão (GPa)",
-#                     "botao": "Verificar viga",
-#                     "resultado": "A resistência calculada é: "
-#                   },
-#             "en": {
-#                     "titulo": "Verification of a Stringer – Pure Bending (NBR 7190)",
-#                     "entrada_tipo_secao": "Section type",
-#                     "tipo_secao": ["Rectangular", "Circular"],
-#                     "base": "Width (cm)",
-#                     "altura": "Height (cm)",
-#                     "diametro": "Diameter (cm)",
-#                     "entrada_comprimento": "Beam length (m)",
-#                     "carga_permanente": "Dead load (kN/m)",
-#                     "trem_tipo": "Load train type",
-#                     "tipo_tb": ["TB-240", "TB-450"],
-#                     "classe_carregamento": "Load duration class",
-#                     "classe_carregamento_opcoes": ["Dead", "Long-term", "Medium-term", "Short-term", "Instantaneous"],
-#                     "classe_madeira": "Wood class",
-#                     "classe_madeira_opcoes": ["Natural wood", "Engineered wood"],
-#                     "classe_umidade": "Moisture class",
-#                     "gamma_g": "γg – Partial safety factor for dead load",
-#                     "gamma_q": "γq – Partial safety factor for variable load",
-#                     "gamma_w": "γw – Partial safety factor for material",
-#                     "f_ck": "Characteristic compressive strength parallel to grain (MPa)",
-#                     "f_tk": "Characteristic tensile strength parallel to grain (MPa)",
-#                     "e_modflex": "Modulus of elasticity in bending (GPa)",
-#                     "botao": "Check beam",
-#                     "resultado": "The calculated resistance is: "
-#                   }
-#          }   
-# t = textos[lang]
+# Cria o dicionário com os textos DESSA página específica
+textos = {
+            "pt": {
+                    "titulo": "Geração de relatório de inspeção por ortofoto",
+                    "entrada_tipo_secao": "Tipo de seção",
+                    "tipo_secao": ["Retangular", "Circular"],
+                    "base": "Base (cm)",
+                    "altura": "Altura (cm)",
+                    "diametro": "Diâmetro (cm)",
+                    "entrada_comprimento": "Comprimento da viga (m)",
+                    "carga_permanente": "Carga permanente (kN/m)",
+                    "trem_tipo": "Tipo de trem",
+                    "tipo_tb": ["TB-240", "TB-450"],
+                    "classe_carregamento": "Classe de carregamento",
+                    "classe_carregamento_opcoes": ["Permanente", "Longa duração", "Média duração", "Curta duração", "Instantânea"],
+                    "classe_madeira": "Classe de madeira", 
+                    "classe_madeira_opcoes": ["Madeira natural","Madeira recomposta"],
+                    "classe_umidade": "Classe de umidade",
+                    "gamma_g": "γg – Coeficiente parcial de segurança da carga permanente",
+                    "gamma_q": "γq – Coeficiente parcial de segurança da carga variável",
+                    "gamma_w": "γw – Coeficiente parcial de segurança do material",
+                    "f_ck": "Resistência característica à compressão paralela às fibras (MPa)",
+                    "f_tk": "Resistência característica à tração paralela às fibras (MPa)",
+                    "e_modflex": "Módulo de elasticidade à flexão (GPa)",
+                    "botao": "Verificar viga",
+                    "resultado": "A resistência calculada é: "
+                  },
+            "en": {
+                    "titulo": "Generation of orthoimage inspection report",
+                    "entrada_tipo_secao": "Section type",
+                    "tipo_secao": ["Rectangular", "Circular"],
+                    "base": "Width (cm)",
+                    "altura": "Height (cm)",
+                    "diametro": "Diameter (cm)",
+                    "entrada_comprimento": "Beam length (m)",
+                    "carga_permanente": "Dead load (kN/m)",
+                    "trem_tipo": "Load train type",
+                    "tipo_tb": ["TB-240", "TB-450"],
+                    "classe_carregamento": "Load duration class",
+                    "classe_carregamento_opcoes": ["Dead", "Long-term", "Medium-term", "Short-term", "Instantaneous"],
+                    "classe_madeira": "Wood class",
+                    "classe_madeira_opcoes": ["Natural wood", "Engineered wood"],
+                    "classe_umidade": "Moisture class",
+                    "gamma_g": "γg – Partial safety factor for dead load",
+                    "gamma_q": "γq – Partial safety factor for variable load",
+                    "gamma_w": "γw – Partial safety factor for material",
+                    "f_ck": "Characteristic compressive strength parallel to grain (MPa)",
+                    "f_tk": "Characteristic tensile strength parallel to grain (MPa)",
+                    "e_modflex": "Modulus of elasticity in bending (GPa)",
+                    "botao": "Check beam",
+                    "resultado": "The calculated resistance is: "
+                  }
+         }   
+t = textos[lang]
 
 # # Calculadora da página
-# st.header(t["titulo"])
+st.header(t["titulo"])
 # tipo_secao = st.selectbox(t["entrada_tipo_secao"], t["tipo_secao"])
 # if tipo_secao in ["Retangular", "Rectangular"]:
 #     b_cm = st.number_input(t["base"], min_value=0.05, value=20.)
