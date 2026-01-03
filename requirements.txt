@@ -1,0 +1,4 @@
+notebook
+pip-chill
+streamlit
+ipykernel
