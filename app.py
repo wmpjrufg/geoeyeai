@@ -19,11 +19,11 @@ lang = st.session_state["lang"]
 titulos_menu = {
                     "pt": {
                             "home": "Início",
-                            "relatorio_orto": "Relatório de inspeção Ortofoto"
+                            "relatorio_orto": "Relatório de Ortofoto"
                           },
                     "en": {
                             "home": "Home",
-                            "relatorio_orto": "Orthoimage Inspection Report"
+                            "relatorio_orto": "Orthoimage Report"
                           }
                 }
 
