@@ -64,7 +64,7 @@ t = textos[lang]
 
 # # Calculadora da página
 st.header(t["titulo"])
-# tipo_secao = st.selectbox(t["entrada_tipo_secao"], t["tipo_secao"])
+tipo_secao = st.selectbox(t["entrada_tipo_secao"], t["tipo_secao"])
 # if tipo_secao in ["Retangular", "Rectangular"]:
 #     b_cm = st.number_input(t["base"], min_value=0.05, value=20.)
 #     h_cm = st.number_input(t["altura"], min_value=0.05, value=50.)
