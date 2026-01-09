@@ -1,36 +1,22 @@
 import streamlit as st
 
-# Configuração da página (Sempre a primeira linha)
 st.set_page_config(page_title="GeoEyeAI", layout="wide")
 
-# Inicializa o estado do idioma se não existir
 if "lang" not in st.session_state:
     st.session_state["lang"] = "pt"
 
-# Cria o seletor na barra lateral (Aparecerá em todas as páginas)
-idioma_selecionado = st.sidebar.selectbox("Language / Idioma", ["Português", "English"], index=0 if st.session_state["lang"] == "pt" else 1)
-if idioma_selecionado == "Português":
-    st.session_state["lang"] = "pt"
-else:
-    st.session_state["lang"] = "en"
+idioma = st.sidebar.selectbox("Language / Idioma", ["Português", "English"], 
+                             index=0 if st.session_state["lang"] == "pt" else 1)
+st.session_state["lang"] = "pt" if idioma == "Português" else "en"
 lang = st.session_state["lang"]
 
-# Dicionário com os Títulos do Menu
-titulos_menu = {
-                    "pt": {
-                            "home": "Início",
-                            "relatorio_orto": "Relatório de Ortofoto"
-                          },
-                    "en": {
-                            "home": "Home",
-                            "relatorio_orto": "Orthoimage Report"
-                          }
-                }
+titulos = {
+    "pt": {"home": "Início", "rel": "Relatório de Ortofoto - Segmentação"},
+    "en": {"home": "Home", "rel": "Orthoimage Report - Segmentation"}
+}
 
-# Definição das páginas usando os títulos dinâmicos
-home_page = st.Page("pages/home.py", title=titulos_menu[lang]["home"], icon="🏠", default=True)
-relatorio_orto_page = st.Page("pages/relatorio_orto.py", title=titulos_menu[lang]["relatorio_orto"], icon="🏗️")
-
-# Executa a navegação
-pg = st.navigation([home_page, relatorio_orto_page])
+pg = st.navigation([
+    st.Page("pages/home.py", title=titulos[lang]["home"], icon="🏠", default=True),
+    st.Page("pages/relatorio_orto.py", title=titulos[lang]["rel"], icon="🏗️")
+])
 pg.run()

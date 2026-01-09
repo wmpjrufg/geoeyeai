@@ -1,139 +1,72 @@
-import streamlit as st
-import pandas as pd
-from PIL import Image
-import tempfile
 import os
-import gc # Garbage Collector para liberar RAM
-from geo import * # Recupera o idioma da sessão
-lang = st.session_state.get("lang", "pt")
+import numpy as np
+import cv2
+import rasterio
+import tensorflow as tf
+import segmentation_models as sm
+import gc
+import streamlit as st
 
-textos_ia = {
-    "pt": {
-        "titulo": "Geração de Relatório de Inspeção por Ortofoto",
-        "btn_analise": "Iniciar Análise Neural",
-        "btn_confirmar": "Confirmar Registro",
-        "btn_descartar": "Descartar Registro",
-        "txt_processando": "Analisando blocos... Isso pode levar alguns minutos.",
-        "txt_pendente": "Aguardando carregamento da ortofoto para processamento.",
-        "status_identificado": "Anomalias identificadas"
-    },
-    "en": {
-        "titulo": "Orthoimage Inspection Report Generation",
-        "btn_analise": "Start Neural Analysis",
-        "btn_confirmar": "Confirm Record",
-        "btn_descartar": "Discard Record",
-        "txt_processando": "Analyzing blocks... This may take a few minutes.",
-        "txt_pendente": "Waiting for orthoimage upload to process.",
-        "status_identificado": "Identified anomalies"
-    }
+# --- CONFIGURACAO CRITICA DE AMBIENTE ---
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
+os.environ['SM_FRAMEWORK'] = 'tf.keras'
+
+# CONFIGURACOES TECNICAS
+MODEL_PATH = './models/model_30epochs_vgg16_2025-12-29.h5'
+BACKBONE = 'vgg16'
+SIZE_INPUT = 512 
+CLASSES = ['agua', 'erosao', 'ruptura', 'trinca']
+COLORS = {
+    'agua': [61, 61, 245],
+    'erosao': [221, 255, 51],
+    'trinca': [252, 128, 7],
+    'ruptura': [36, 179, 83]
 }
-ti = textos_ia[lang]
 
-st.header(ti["titulo"])
+def setup_tf_memory():
+    """Configura o TensorFlow para evitar estouro de memoria."""
+    tf.config.threading.set_intra_op_parallelism_threads(2)
+    tf.config.threading.set_inter_op_parallelism_threads(2)
 
-# Inicialização segura do estado
-if 'results_data' not in st.session_state:
-    st.session_state.results_data = []
-if 'current_index' not in st.session_state:
-    st.session_state.current_index = 0
+setup_tf_memory()
 
-with st.sidebar:
-    st.divider()
-    up_file = st.file_uploader("Upload Ortofoto (TIF)", type=["tif", "tiff"])
-    
-    if up_file and st.button(ti["btn_analise"]):
-        # 1. Carregar modelo apenas quando necessário
-        model = load_segmentation_model()
-        
-        # 2. Processamento de arquivo temporário
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.tif') as tfile:
-            tfile.write(up_file.getvalue())
-            temp_path = tfile.name
+def extract_img_geotrans_Tiff(filepath_tiff: str) -> np.ndarray:
+    with rasterio.open(filepath_tiff) as src:
+        # Le as 3 bandas iniciais
+        data = src.read((1, 2, 3))
+        img = np.transpose(data, (1, 2, 0))
+        if img.dtype != np.uint8:
+            img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        return img
 
-        try:
-            # 3. Extração e Split
-            with st.status(ti["txt_processando"]) as status:
-                rgb_image = extract_img_geotrans_Tiff(temp_path)
-                blocks, offsets = split_image(rgb_image, SIZE_INPUT)
-                
-                # Deletar imagem original da RAM imediatamente após o split
-                del rgb_image
-                gc.collect()
+def split_image(image: np.ndarray, block_size: int):
+    h, w, c = image.shape
+    blocks, offsets = [], []
+    for i in range(0, h, block_size):
+        for j in range(0, w, block_size):
+            block = image[i:i + block_size, j:j + block_size]
+            bh, bw = block.shape[:2]
+            if bh < block_size or bw < block_size:
+                block = cv2.copyMakeBorder(block, 0, block_size - bh, 0, block_size - bw, 
+                                         cv2.BORDER_CONSTANT, value=[0]*c)
+            blocks.append(block)
+            offsets.append((i, j))
+    return blocks, offsets
 
-                results = []
-                total = len(blocks)
-                
-                # 4. Loop de Predição Otimizado
-                for idx, (block, offset) in enumerate(zip(blocks, offsets)):
-                    # Adicionamos uma pequena margem para evitar processar blocos puramente brancos/pretos (vazios)
-                    if np.mean(block) > 250 or np.mean(block) < 5:
-                        continue
+@st.cache_resource
+def load_segmentation_model():
+    n_classes = len(CLASSES) + 1
+    model = sm.Unet(BACKBONE, classes=n_classes, activation='softmax', encoder_weights=None)
+    model.load_weights(MODEL_PATH)
+    return model
 
-                    prediction = model.predict(np.expand_dims(block, axis=0), verbose=0)
-                    pred_mask = prediction.squeeze()
-                    
-                    # Filtro de confiança: 0.5
-                    if np.any(pred_mask[:, :, :-1] > 0.5):
-                        m_rgb, class_str = create_mask_overlay(pred_mask)
-                        results.append({
-                            'original': block, 
-                            'mask_rgb': m_rgb, 
-                            'y': offset[0], 
-                            'x': offset[1],
-                            'tipo': class_str, 
-                            'status': 'Pendente'
-                        })
-                    
-                    if idx % 100 == 0:
-                        status.update(label=f"Processando: {idx}/{total} - {len(results)} {ti['status_identificado']}")
-
-                st.session_state.results_data = results
-                st.session_state.current_index = 0
-                status.update(label="Análise Concluída!", state="complete")
-        
-        except Exception as e:
-            st.error(f"Erro no processamento: {e}")
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            # Limpeza final de memória
-            gc.collect()
-            st.rerun()
-
-# --- ÁREA DE EXIBIÇÃO ---
-if st.session_state.results_data:
-    res = st.session_state.results_data
-    idx = st.session_state.current_index
-    item = res[idx]
-
-    col_nav = st.columns([1, 2, 1])
-    with col_nav[0]:
-        if st.button("⬅️") and idx > 0:
-            st.session_state.current_index -= 1
-            st.rerun()
-    with col_nav[1]:
-        st.write(f"**Registro {idx+1} de {len(res)}** | Status: {item['status']}")
-    with col_nav[2]:
-        if st.button("➡️") and idx < len(res) - 1:
-            st.session_state.current_index += 1
-            st.rerun()
-
-    v_cols = st.columns([1, 1, 2])
-    with v_cols[0]:
-        if st.button(ti["btn_confirmar"], use_container_width=True):
-            st.session_state.results_data[idx]['status'] = 'Confirmado'
-            st.rerun()
-    with v_cols[1]:
-        if st.button(ti["btn_descartar"], use_container_width=True):
-            st.session_state.results_data[idx]['status'] = 'Excluido'
-            st.rerun()
-    with v_cols[2]:
-        opac = st.slider("Overlay", 0.0, 1.0, 0.5)
-
-    img_o = Image.fromarray(item['original'])
-    img_m = Image.fromarray(item['mask_rgb'])
-    c1, c2 = st.columns(2)
-    c1.image(img_o, use_container_width=True, caption=f"Original (Y:{item['y']} X:{item['x']})")
-    c2.image(Image.blend(img_o, img_m, alpha=opac), use_container_width=True, caption=item['tipo'])
-else:
-    st.info(ti["txt_pendente"])
+def create_mask_overlay(pred_mask):
+    mask_indices = np.argmax(pred_mask, axis=-1)
+    mask_rgb = np.zeros((512, 512, 3), dtype=np.uint8)
+    detected_classes = []
+    for i, class_name in enumerate(CLASSES):
+        if np.any(mask_indices == i):
+            mask_rgb[mask_indices == i] = COLORS[class_name]
+            detected_classes.append(class_name)
+    return mask_rgb, ", ".join(detected_classes)

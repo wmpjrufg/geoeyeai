@@ -1,132 +1,171 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
-
-from geo import *
-
-# Home
+from PIL import Image
+import tempfile
+import os
+import gc
+import numpy as np
+from geo import * # CORREÇÃO AQUI: Quebra de linha adicionada
 lang = st.session_state.get("lang", "pt")
 
-# Cria o dicionário com os textos DESSA página específica
 textos = {
-            "pt": {
-                    "titulo": "Geração de relatório de inspeção por ortofoto",
-                    "entrada_tipo_secao": "Tipo de seção",
-                    "tipo_secao": ["Retangular", "Circular"],
-                    "base": "Base (cm)",
-                    "altura": "Altura (cm)",
-                    "diametro": "Diâmetro (cm)",
-                    "entrada_comprimento": "Comprimento da viga (m)",
-                    "carga_permanente": "Carga permanente (kN/m)",
-                    "trem_tipo": "Tipo de trem",
-                    "tipo_tb": ["TB-240", "TB-450"],
-                    "classe_carregamento": "Classe de carregamento",
-                    "classe_carregamento_opcoes": ["Permanente", "Longa duração", "Média duração", "Curta duração", "Instantânea"],
-                    "classe_madeira": "Classe de madeira", 
-                    "classe_madeira_opcoes": ["Madeira natural","Madeira recomposta"],
-                    "classe_umidade": "Classe de umidade",
-                    "gamma_g": "γg – Coeficiente parcial de segurança da carga permanente",
-                    "gamma_q": "γq – Coeficiente parcial de segurança da carga variável",
-                    "gamma_w": "γw – Coeficiente parcial de segurança do material",
-                    "f_ck": "Resistência característica à compressão paralela às fibras (MPa)",
-                    "f_tk": "Resistência característica à tração paralela às fibras (MPa)",
-                    "e_modflex": "Módulo de elasticidade à flexão (GPa)",
-                    "botao": "Verificar viga",
-                    "resultado": "A resistência calculada é: "
-                  },
-            "en": {
-                    "titulo": "Generation of orthoimage inspection report",
-                    "entrada_tipo_secao": "Section type",
-                    "tipo_secao": ["Rectangular", "Circular"],
-                    "base": "Width (cm)",
-                    "altura": "Height (cm)",
-                    "diametro": "Diameter (cm)",
-                    "entrada_comprimento": "Beam length (m)",
-                    "carga_permanente": "Dead load (kN/m)",
-                    "trem_tipo": "Load train type",
-                    "tipo_tb": ["TB-240", "TB-450"],
-                    "classe_carregamento": "Load duration class",
-                    "classe_carregamento_opcoes": ["Dead", "Long-term", "Medium-term", "Short-term", "Instantaneous"],
-                    "classe_madeira": "Wood class",
-                    "classe_madeira_opcoes": ["Natural wood", "Engineered wood"],
-                    "classe_umidade": "Moisture class",
-                    "gamma_g": "γg – Partial safety factor for dead load",
-                    "gamma_q": "γq – Partial safety factor for variable load",
-                    "gamma_w": "γw – Partial safety factor for material",
-                    "f_ck": "Characteristic compressive strength parallel to grain (MPa)",
-                    "f_tk": "Characteristic tensile strength parallel to grain (MPa)",
-                    "e_modflex": "Modulus of elasticity in bending (GPa)",
-                    "botao": "Check beam",
-                    "resultado": "The calculated resistance is: "
-                  }
-         }   
+    "pt": {
+        "titulo": "Geração de Relatório de Inspeção por Ortofoto - Segmentação",
+        "btn_analise": "Iniciar Predição",
+        "btn_confirmar": "Confirmar Registro",
+        "btn_descartar": "Descartar Registro",
+        "txt_processando": "Analisando blocos e liberando memória...",
+        "txt_pendente": "Aguardando carregamento da ortofoto.",
+        "status_identificado": "Anomalias encontradas",
+        "opacidade": "Opacidade da Máscara",
+        "relatorio_header": "Relatório de Saída",
+        "btn_download": "Baixar Relatório CSV",
+        "txt_confirmadas": "anomalias confirmadas"
+    },
+    "en": {
+        "titulo": "Orthoimage Inspection Report Generation - Segmentation",
+        "btn_analise": "Start Prediction",
+        "btn_confirmar": "Confirm Record",
+        "btn_descartar": "Discard Record",
+        "txt_processando": "Analyzing blocks and clearing memory...",
+        "txt_pendente": "Waiting for orthoimage upload.",
+        "status_identificado": "Anomalies found",
+        "opacidade": "Mask Opacity",
+        "relatorio_header": "Output Report",
+        "btn_download": "Download CSV Report",
+        "txt_confirmadas": "confirmed anomalies"
+    }
+}
 t = textos[lang]
 
-# # Calculadora da página
 st.header(t["titulo"])
-tipo_secao = st.selectbox(t["entrada_tipo_secao"], t["tipo_secao"])
-# if tipo_secao in ["Retangular", "Rectangular"]:
-#     b_cm = st.number_input(t["base"], min_value=0.05, value=20.)
-#     h_cm = st.number_input(t["altura"], min_value=0.05, value=50.)
-#     b = b_cm / 100
-#     h = h_cm / 100
-#     geo = {"b_w": b, "h": h}
-# else:
-#     d_cm = st.number_input(t["diametro"], min_value=0.05, value=30.)
-#     d = d_cm / 100
-#     geo = {"d": d}
-# carga_pp = 8.0
-# l = st.number_input(t["entrada_comprimento"], min_value=3.0, value=6.0)
-# col1, col2 = st.columns(2)
-# with col1:
-#     p_gk = st.number_input(t["carga_permanente"], value=carga_pp)    
-# with col2:
-#     p_qk = st.selectbox(t["trem_tipo"], t["tipo_tb"])
-# classe_carregamento = st.selectbox(t["classe_carregamento"], t["classe_carregamento_opcoes"]).lower()
-# if classe_carregamento == "permanent":
-#     classe_carregamento = "Permanente"
-# elif classe_carregamento == "long-term":
-#     classe_carregamento = "Longa duração"
-# elif classe_carregamento == "medium-term":
-#     classe_carregamento = "Média duração"
-# elif classe_carregamento == "short-term":
-#     classe_carregamento = "Curta duração"
-# elif classe_carregamento == "instantaneous":
-#     classe_carregamento = "Instantânea"
-# classe_madeira = st.selectbox(t["classe_madeira"], t["classe_madeira_opcoes"]).lower()
-# if classe_madeira == "natural wood":
-#     classe_madeira = "madeira natural"
-# else: 
-#     classe_madeira = "madeira recomposta"
-# classe_umidade = st.selectbox(t["classe_umidade"], [1, 2, 3, 4])
-# gamma_g = st.number_input(t["gamma_g"], value=1.40, step=0.1)
-# gamma_q = st.number_input(t["gamma_q"], value=1.40, step=0.1)
-# gamma_w = st.number_input(t["gamma_w"], value=1.40, step=0.1)
-# f_ck = st.number_input(t["f_ck"], value=20.0)
-# f_tk = st.number_input(t["f_tk"], value=15.0)
-# e_modflex = st.number_input(t["e_modflex"], value=12.0)
-# f_ck *=  1000  # Converte MPa para kN/m²
-# f_tk *= 1000  # Converte MPa para kN/m²
-# e_modflex *= 1E9  # Converte GPa para kN/m²
 
-# if st.button(t["botao"]):
-    
-#     # Análise final
-#     res_m, res_delta = checagem_longarina_madeira_flexao(geo, p_gk, p_qk, l, classe_carregamento, classe_madeira, classe_umidade, gamma_g, gamma_q, gamma_w, f_ck, f_tk, e_modflex)
-    
-#     # Tabela de Flexão
-#     st.subheader("Flexão (ELU)")
-#     # Converte o dicionário para tabela (orient='index' deixa as chaves nas linhas)
-#     df_m = pd.DataFrame.from_dict(res_m, orient='index', columns=['Valor'])
-#     st.table(df_m)
+if 'results_data' not in st.session_state:
+    st.session_state.results_data = []
+if 'current_index' not in st.session_state:
+    st.session_state.current_index = 0
 
-#     # Tabela de Flecha
-#     st.subheader("Flecha (ELS)")
-#     df_delta = pd.DataFrame.from_dict(res_delta, orient='index', columns=['Valor'])
-#     st.table(df_delta)
+# --- BARRA LATERAL (Upload e Relatório) ---
+with st.sidebar:
+    st.divider()
+    up_file = st.file_uploader("Upload Ortofoto (TIF)", type=["tif", "tiff"])
     
-#     # Mensagem final resumida
-#     if res_m['analise'] == 'OK' and res_delta['analise'] == 'OK':
-#         st.success("Resultado Final: APROVADO")
-#     else:
-#         st.error("Resultado Final: REPROVADO")
+    if up_file and st.button(t["btn_analise"]):
+        st.session_state.results_data = [] 
+        gc.collect()
+        
+        model = load_segmentation_model()
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.tif') as tfile:
+            tfile.write(up_file.getvalue())
+            temp_path = tfile.name
+
+        try:
+            with st.status(t["txt_processando"]) as status_box:
+                rgb_image = extract_img_geotrans_Tiff(temp_path)
+                blocks, offsets = split_image(rgb_image, SIZE_INPUT)
+                
+                del rgb_image 
+                gc.collect()
+
+                results = []
+                total = len(blocks)
+                
+                for idx, (block, offset) in enumerate(zip(blocks, offsets)):
+                    # Filtro de blocos vazios
+                    if np.mean(block) > 245 or np.mean(block) < 10: 
+                        continue
+
+                    prediction = model.predict(np.expand_dims(block, axis=0), verbose=0)
+                    pred_mask = prediction.squeeze()
+                    
+                    if np.any(pred_mask[:, :, :-1] > 0.5):
+                        m_rgb, class_str = create_mask_overlay(pred_mask)
+                        results.append({
+                            'original': block, 
+                            'mask_rgb': m_rgb, 
+                            'y': offset[0], 
+                            'x': offset[1], 
+                            'tipo': class_str, 
+                            'status': 'Pendente'
+                        })
+                    
+                    # Atualiza status a cada 50 blocos para não travar a UI
+                    if idx % 50 == 0:
+                         status_box.update(label=f"Progresso: {idx}/{total}")
+
+                st.session_state.results_data = results
+                st.session_state.current_index = 0
+                status_box.update(label="Analise Concluida!", state="complete")
+        
+        except Exception as e:
+            st.error(f"Erro: {e}")
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            gc.collect()
+            st.rerun()
+
+    # --- LÓGICA DE DOWNLOAD ---
+    st.divider()
+    st.header(t["relatorio_header"])
+    
+    # Filtra apenas os confirmados
+    confirmados = [r for r in st.session_state.results_data if r['status'] == 'Confirmado']
+    
+    if confirmados:
+        df = pd.DataFrame([{
+            'Pixel_Y': r['y'], 
+            'Pixel_X': r['x'], 
+            'Tipo_Anomalia': r['tipo']
+        } for r in confirmados])
+        
+        st.success(f"{len(confirmados)} {t['txt_confirmadas']}")
+        
+        st.download_button(
+            label=t["btn_download"],
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name="inspecao_geoeye.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    else:
+        st.info("Nenhuma confirmação efetuada.")
+
+# --- ÁREA DE EXIBIÇÃO ---
+if st.session_state.results_data:
+    res = st.session_state.results_data
+    idx = st.session_state.current_index
+    item = res[idx]
+
+    c_nav = st.columns([1, 2, 1])
+    with c_nav[0]:
+        if st.button("⬅️") and idx > 0:
+            st.session_state.current_index -= 1
+            st.rerun()
+    with c_nav[1]:
+        st.write(f"**{idx+1} / {len(res)}** | {item['status']}")
+    with c_nav[2]:
+        if st.button("➡️") and idx < len(res) - 1:
+            st.session_state.current_index += 1
+            st.rerun()
+
+    v_cols = st.columns([1, 1, 2])
+    with v_cols[0]:
+        if st.button(t["btn_confirmar"], use_container_width=True):
+            st.session_state.results_data[idx]['status'] = 'Confirmado'
+            st.rerun()
+    with v_cols[1]:
+        if st.button(t["btn_descartar"], use_container_width=True):
+            st.session_state.results_data[idx]['status'] = 'Excluido'
+            st.rerun()
+    with v_cols[2]:
+        opac = st.slider(t["opacidade"], 0.0, 1.0, 0.5)
+
+    img_o = Image.fromarray(item['original'])
+    img_m = Image.fromarray(item['mask_rgb'])
+    c1, c2 = st.columns(2)
+    c1.image(img_o, use_container_width=True, caption=f"Y:{item['y']} X:{item['x']}")
+    c2.image(Image.blend(img_o, img_m, alpha=opac), use_container_width=True, caption=item['tipo'])
+else:
+    st.info(t["txt_pendente"])
