@@ -63,10 +63,19 @@ def load_segmentation_model():
 
 def create_mask_overlay(pred_mask):
     mask_indices = np.argmax(pred_mask, axis=-1)
-    mask_rgb = np.zeros((512, 512, 3), dtype=np.uint8)
+    
+    # Cria uma matriz de 4 canais (RGBA) preenchida com ZEROS
+    # Zero no 4º canal significa 100% transparente
+    mask_rgba = np.zeros((512, 512, 4), dtype=np.uint8)
+    
     detected_classes = []
     for i, class_name in enumerate(CLASSES):
         if np.any(mask_indices == i):
-            mask_rgb[mask_indices == i] = COLORS[class_name]
+            # Onde achou o defeito, coloca a cor RGB
+            mask_rgba[mask_indices == i, :3] = COLORS[class_name]
+            # E coloca o canal Alpha (índice 3) em 255 (Sólido) apenas onde tem defeito
+            mask_rgba[mask_indices == i, 3] = 255
+            
             detected_classes.append(class_name)
-    return mask_rgb, ", ".join(detected_classes)
+            
+    return mask_rgba, ", ".join(detected_classes)
