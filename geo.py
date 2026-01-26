@@ -1,18 +1,31 @@
 import os
-import numpy as np
-import cv2
-import rasterio
-import tensorflow as tf
-import segmentation_models as sm
-import gc
-import streamlit as st
+import sys
 
-# --- CONFIGURACAO CRITICA DE AMBIENTE ---
+# --- 1. CRITICAL CONFIGURATION (MUST BE FIRST) ---
+# Define environment variables BEFORE importing tensorflow or segmentation_models
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
 os.environ['SM_FRAMEWORK'] = 'tf.keras'
 
-# CONFIGURACOES TECNICAS
+# --- 2. IMPORTS ---
+import numpy as np
+import cv2
+import rasterio
+import tensorflow as tf
+from tensorflow import keras
+
+# --- 3. COMPATIBILITY PATCH (The Monkey Patch) ---
+# This fixes the "AttributeError: module 'keras.utils' has no attribute 'generic_utils'"
+# by redirecting the old call to the new location of the utils.
+if not hasattr(keras.utils, 'generic_utils'):
+    import keras.utils
+    keras.utils.generic_utils = keras.utils
+
+import segmentation_models as sm
+import gc
+import streamlit as st
+
+# --- REST OF YOUR CODE ---
 MODEL_PATH = './models/model_30epochs_vgg16_2025-12-29.h5'
 BACKBONE = 'vgg16'
 SIZE_INPUT = 512 
@@ -26,6 +39,15 @@ COLORS = {
 
 def setup_tf_memory():
     """Configura o TensorFlow para evitar estouro de memoria."""
+    # Check if GPUs are listed before setting config
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
+            
     tf.config.threading.set_intra_op_parallelism_threads(2)
     tf.config.threading.set_inter_op_parallelism_threads(2)
 
@@ -57,6 +79,7 @@ def split_image(image: np.ndarray, block_size: int):
 @st.cache_resource
 def load_segmentation_model():
     n_classes = len(CLASSES) + 1
+    # Using sm.Unet with the correct backbone
     model = sm.Unet(BACKBONE, classes=n_classes, activation='softmax', encoder_weights=None)
     model.load_weights(MODEL_PATH)
     return model
@@ -65,15 +88,12 @@ def create_mask_overlay(pred_mask):
     mask_indices = np.argmax(pred_mask, axis=-1)
     
     # Cria uma matriz de 4 canais (RGBA) preenchida com ZEROS
-    # Zero no 4º canal significa 100% transparente
     mask_rgba = np.zeros((512, 512, 4), dtype=np.uint8)
     
     detected_classes = []
     for i, class_name in enumerate(CLASSES):
         if np.any(mask_indices == i):
-            # Onde achou o defeito, coloca a cor RGB
             mask_rgba[mask_indices == i, :3] = COLORS[class_name]
-            # E coloca o canal Alpha (índice 3) em 255 (Sólido) apenas onde tem defeito
             mask_rgba[mask_indices == i, 3] = 255
             
             detected_classes.append(class_name)
