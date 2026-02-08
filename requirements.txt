@@ -1,3 +1,6 @@
-fastai
-ipykernel
-notebook
+fastai==2.7.18
+ipykernel==6.29.5
+jaraco.collections==5.1.0
+pip-chill==1.0.3
+streamlit==1.40.1
+tomli==2.0.1
