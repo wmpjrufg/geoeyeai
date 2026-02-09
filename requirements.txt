@@ -1,6 +1,8 @@
 fastai==2.7.18
+gdown==5.2.1
 ipykernel==6.29.5
 jaraco.collections==5.1.0
 pip-chill==1.0.3
+pysocks==1.7.1
 streamlit==1.40.1
 tomli==2.0.1
