@@ -4,6 +4,17 @@ import gdown
 import os
 import numpy as np
 import torch
+import sys
+import fastcore.dispatch
+import fastcore.transform
+
+# Redireciona as referências obsoletas para os módulos atuais
+sys.modules['fastcore.dispatch'] = fastcore.dispatch
+sys.modules['fastcore.transform'] = fastcore.transform
+
+# AGORA você importa o restante
+import streamlit as st
+from fastai.vision.all import *
 
 # ==============================================================================
 # 1. FORÇAR USO DE CPU (IMPORTANTE PARA DEPLOY ONLINE)
