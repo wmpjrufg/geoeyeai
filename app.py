@@ -20,7 +20,7 @@ def mask_converter(x): pass
 # 2. CONFIGURAÇÕES DO MODELO
 # ==============================================================================
 FILE_ID = '1eklLbrDgvhuvK2erXltaOoijInLigzcB'
-MODEL_PATH = 'modelo_final_1024.pkl'
+MODEL_PATH = 'modelo_fastai.pkl'
 
 @st.cache_resource
 def load_model():
@@ -57,26 +57,41 @@ if uploaded_file:
         st.image(img, use_container_width=True)
 
     if st.button('🚀 Executar Análise'):
-        with st.spinner('Processando pixels na CPU...'):
-            img_input = img.reshape(512, 512)
-            
-            with torch.no_grad():
-                pred, _, _ = learn.predict(img_input)
-            
-            with col2:
-                st.subheader("Resultado da Segmentação")
-                mask_np = np.array(pred)
+            with st.spinner('Processando pixels na CPU...'):
+                # O FastAI já redimensiona internamente baseado no que foi treinado
+                pred, pred_idx, probs = learn.predict(img)
                 
-                display_mask = np.zeros((*mask_np.shape, 3), dtype=np.uint8)
-                display_mask[mask_np == 1] = [61, 61, 245]   # Azul
-                display_mask[mask_np == 2] = [221, 255, 51]  # Amarelo
-                
-                st.image(display_mask, use_container_width=True)
-                
-                total = mask_np.size
-                agua = (mask_np == 1).sum()
-                erosao = (mask_np == 2).sum()
-                
-                m1, m2 = st.columns(2)
-                m1.metric("Área de Água", f"{(agua/total)*100:.2f}%")
-                m2.metric("Área de Erosão", f"{(erosao/total)*100:.2f}%")
+                with col2:
+                    st.subheader("Resultado da Segmentação")
+                    mask_np = np.array(pred)
+                    
+                    # Criamos a imagem colorida para exibir
+                    display_mask = np.zeros((*mask_np.shape, 3), dtype=np.uint8)
+                    
+                    # Pintamos conforme o seu PIXEL_MAP original do treino
+                    display_mask[mask_np == 1] = [61, 61, 245]   # Água (Azul)
+                    display_mask[mask_np == 2] = [221, 255, 51]  # Erosão (Amarelo)
+                    display_mask[mask_np == 3] = [252, 128, 7]   # Trinca (Laranja)
+                    display_mask[mask_np == 4] = [36, 179, 83]   # Ruptura (Verde)
+                    
+                    st.image(display_mask, use_container_width=True)
+                    
+                    # Cálculos de área
+                    total = mask_np.size
+                    
+                    # Criando métricas dinâmicas
+                    st.markdown("### 📊 Estatísticas de Área")
+                    cols = st.columns(4)
+                    
+                    classes = {
+                        "Água": (1, [61, 61, 245]),
+                        "Erosão": (2, [221, 255, 51]),
+                        "Trinca": (3, [252, 128, 7]),
+                        "Ruptura": (4, [36, 179, 83])
+                    }
+                    
+                    for i, (nome, info) in enumerate(classes.items()):
+                        id_cl, cor = info
+                        qtd = (mask_np == id_cl).sum()
+                        porcentagem = (qtd / total) * 100
+                        cols[i].metric(nome, f"{porcentagem:.2f}%")
