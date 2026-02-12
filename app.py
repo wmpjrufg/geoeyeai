@@ -19,7 +19,7 @@ def mask_converter(x): pass
 # ==============================================================================
 # 2. CONFIGURAÇÕES DO MODELO
 # ==============================================================================
-FILE_ID = '1lrgGthfefVk0fJi3UabASJwYM3znJtyr'
+FILE_ID = '1eklLbrDgvhuvK2erXltaOoijInLigzcB'
 MODEL_PATH = 'modelo_final_1024.pkl'
 
 @st.cache_resource
