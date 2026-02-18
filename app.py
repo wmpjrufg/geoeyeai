@@ -19,13 +19,19 @@ torch.set_num_threads(max(1, os.cpu_count() or 1))
 #    - cut_fn será aplicado automaticamente se for mobilenet
 # ==============================================================================
 MODELS = {
-    "MobileNetV2": {
-        "file_id": "1OottSdIkgImYBmRXh81xgWtCqXpQtE1n",
-        "arch": "mobilenet_v2",
-        "img_size": 768,
-        "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura'],
-    },
-}
+                "MobileNetV2": {
+                                    "file_id": "1OottSdIkgImYBmRXh81xgWtCqXpQtE1n",
+                                    "arch": "mobilenet_v2",
+                                    "img_size": 768,
+                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                                },
+                "ResNet18": {
+                                "file_id": "1MlDj-2B5Wad9O4pSqrLnaPWpR-R1xZGk",
+                                "arch": "resnet18",
+                                "img_size": 768,
+                                "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                            }
+        }
 
 # ==============================================================================
 # 3. FUNÇÕES UTILITÁRIAS
@@ -57,9 +63,7 @@ def _resolve_arch(arch_name: str):
     raise ValueError(f"Arquitetura não suportada: {arch_name}")
 
 def _weights_path_for(model_key: str) -> str:
-    """Cada modelo salva num arquivo .pth separado, evitando conflito local."""
-    safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in model_key)
-    return f"weights_{safe_name}.pth"
+    return "weights_current.pth"
 
 def _build_dummy_dls(img_size: int, codes: list[str]):
     """Cria DLS dummy para montar o pipeline do fastai (mínima intervenção)."""
@@ -91,6 +95,10 @@ def load_model_cpu(model_key: str):
     codes = cfg.get("codes", ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura'])
 
     weights_path = _weights_path_for(model_key)
+
+    # sempre substitui
+    if os.path.exists(weights_path):
+        os.remove(weights_path)
 
     # 1) Baixa o .pth
     if not os.path.exists(weights_path):
