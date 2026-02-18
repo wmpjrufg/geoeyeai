@@ -30,6 +30,12 @@ MODELS = {
                                 "arch": "resnet18",
                                 "img_size": 768,
                                 "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                            },
+                "ResNet34": {
+                                "file_id": "1PIEUBRvRtPDLopizvUwq66d-m5TTvTU8",
+                                "arch": "resnet34",
+                                "img_size": 768,
+                                "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
                             }
         }
 
