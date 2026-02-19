@@ -43,6 +43,12 @@ MODELS = {
                                     "img_size": 768,
                                     "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
                                 },
+                # "ResNet50": {
+                #                     "file_id": "1xEhMtTqK_VXae14ZYe6JWNTylc0eIR9Q",
+                #                     "arch": "resnet50",
+                #                     "img_size": 768,
+                #                     "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                #                 },
         }
 
 # ==============================================================================
