@@ -37,18 +37,24 @@ MODELS = {
                                 "img_size": 768,
                                 "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
                             },
+                "ResNet50": {
+                                    "file_id": "11-tpfad51B71PB4m-hXfwQXbuUjkQEEQ",
+                                    "arch": "resnet50",
+                                    "img_size": 768,
+                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                                },
                 "MobileNetV3small": {
                                     "file_id": "1xEhMtTqK_VXae14ZYe6JWNTylc0eIR9Q",
                                     "arch": "mobilenet_v3_small",
                                     "img_size": 768,
                                     "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
                                 },
-                # "ResNet50": {
-                #                     "file_id": "1xEhMtTqK_VXae14ZYe6JWNTylc0eIR9Q",
-                #                     "arch": "resnet50",
-                #                     "img_size": 768,
-                #                     "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                #                 },
+                "MobileNetV3large": {
+                                    "file_id": "1_je_PzTVqyOyCLKiFKwY1vrayLEnS4UD",
+                                    "arch": "mobilenet_v3_large",
+                                    "img_size": 768,
+                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                                },
         }
 
 # ==============================================================================
