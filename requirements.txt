@@ -8,3 +8,4 @@ pysocks==1.7.1
 roboflow==1.2.13
 streamlit==1.40.1
 tomli==2.0.1
+fpdf2==2.8.1
