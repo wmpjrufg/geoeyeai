@@ -36,7 +36,13 @@ MODELS = {
                                 "arch": "resnet34",
                                 "img_size": 768,
                                 "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                            }
+                            },
+                "MobileNetV3small": {
+                                    "file_id": "1xEhMtTqK_VXae14ZYe6JWNTylc0eIR9Q",
+                                    "arch": "mobilenet_v3_small",
+                                    "img_size": 768,
+                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
+                                },
         }
 
 # ==============================================================================
