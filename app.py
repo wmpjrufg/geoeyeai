@@ -23,30 +23,14 @@ torch.set_num_threads(max(1, os.cpu_count() or 1))
 # 2. CATÁLOGO DE MODELOS (DICIONÁRIO)
 # ==============================================================================
 MODELS = {
-                "MobileNetV2": {
-                                    "file_id": "1OottSdIkgImYBmRXh81xgWtCqXpQtE1n",
-                                    "arch": "mobilenet_v2",
-                                    "img_size": 768,
-                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                                },
+               
                 "ResNet18": {
                                 "file_id": "1MlDj-2B5Wad9O4pSqrLnaPWpR-R1xZGk",
                                 "arch": "resnet18",
                                 "img_size": 768,
                                 "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                            },
-                "ResNet34": {
-                                "file_id": "1PIEUBRvRtPDLopizvUwq66d-m5TTvTU8",
-                                "arch": "resnet34",
-                                "img_size": 768,
-                                "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                            },
-                "MobileNetV3small": {
-                                    "file_id": "1xEhMtTqK_VXae14ZYe6JWNTylc0eIR9Q",
-                                    "arch": "mobilenet_v3_small",
-                                    "img_size": 768,
-                                    "codes": ['Background', 'Agua', 'Erosao', 'Trinca', 'Ruptura']
-                                },
+                            }
+              
         }
 
 # ==============================================================================
