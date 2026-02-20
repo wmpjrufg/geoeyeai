@@ -1,0 +1,12 @@
+fastai==2.7.18
+gdown==5.2.1
+ipykernel==6.29.5
+jaraco.collections==5.1.0
+pip-chill==1.0.3
+pycocotools==2.0.7
+pysocks==1.7.1
+roboflow==1.2.13
+streamlit==1.40.1
+tomli==2.0.1
+fpdf2==2.8.1
+streamlit-drawable-canvas==0.9.3

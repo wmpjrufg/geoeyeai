@@ -1,0 +1,9 @@
+myenv/
+myenvcoco/
+cell_data/
+env/
+venv/
+*.pyc
+__pycache__/
+models/
+*.pkl
